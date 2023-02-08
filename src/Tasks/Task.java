@@ -3,18 +3,19 @@ package Tasks;
 import enums.Period;
 import exceptions.PastCall;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 
-import static enums.Period.*;
-
-public class Task implements Comparable {
+final public class Task implements Comparable {
     private static long count = 0;
     final private static List<Task> finishedTasks = new LinkedList<>();
     final private long id;
     final private boolean isPersonal;
     private String header;
     private String description;
-    private GregorianCalendar date;
+    final private LocalDateTime date;
     private Period period;
 
 
@@ -23,24 +24,16 @@ public class Task implements Comparable {
         this.header = header;
         this.description = description;
         this.period = period;
-        GregorianCalendar temp = new GregorianCalendar(year, month - 1, day, hrs, mins);
-        if (new Date().after(temp.getTime())) throw new PastCall();
+        LocalDateTime temp = LocalDateTime.of(year, month, day, hrs, mins);
+        if (LocalDateTime.now().isAfter(temp)) throw new PastCall();
         this.date = temp;
         this.isPersonal = isPersonal;
     }
 
-    public void setNextTime() {
-        if (period.equals(ONCE)) finishedTasks.add(this);
-        if (period.equals(DAILY)) date.add(Calendar.DAY_OF_WEEK, 1);
-        if (period.equals(WEEKLY)) date.add(Calendar.WEEK_OF_MONTH, 1);
-        if (period.equals(MONTHLY)) date.add(Calendar.MONTH, 1);
-        if (period.equals(YEARLY)) date.add(Calendar.YEAR, 1);
-    }
-
     @Override
     public int compareTo(Object o) {
-        if (date.before(((Task) o).getDate())) return -1;
-        else if (date.after(((Task) o).getDate())) return 1;
+        if (date.isBefore(((Task) o).getDateTime())) return -1;
+        else if (date.isAfter(((Task) o).getDateTime())) return 1;
         else return 0;
     }
 
@@ -64,12 +57,22 @@ public class Task implements Comparable {
                 ".\nPeriod: " + period + "\nid: " + id;
     }
 
-    public String getTaskData() {
+    public String getFullData() {
         return (isPersonal ? "Personal" : "Work") + " Task: " + header + "\nDescription: " + description +
-                ".\nTime and date: " + date.getTime() + ".\nPeriod: " + period + "\nid: " + id;
+                ".\nTime and date: " + date + ".\nPeriod: " + period + "\nid: " + id;
+    }
+    public String getTaskAndTime() {
+        return (isPersonal ? "Personal" : "Work") + " Task: " + header + "\nDescription: " + description +
+                ".\nTime: " + date.toLocalTime() + ".\nPeriod: " + period + "\nid: " + id;
     }
 
-    public GregorianCalendar getDate() {
+    public LocalDate getDate() {
+        return date.toLocalDate();
+    }
+    public LocalTime getTime() {
+        return date.toLocalTime();
+    }
+    public LocalDateTime getDateTime() {
         return date;
     }
 

@@ -2,15 +2,15 @@ package Tasks;
 
 import enums.Period;
 
+import java.time.LocalDate;
 import java.util.*;
 
-import static enums.Period.DAILY;
-import static enums.Period.ONCE;
+import static enums.Period.*;
 
-public class TaskHandler {
+final public class TaskHandler {
     final private static Set<Task> tasks = new TreeSet<>();
-    final private static Map<Task, String> archive = new LinkedHashMap<>();
-    final private static Set<Task> removed = new LinkedHashSet<>();
+    final private static List<Task> expired = new LinkedList<>();
+    final private static List<Task> removed = new LinkedList<>();
 
     public static void addNewTaskInstance(String header, String description, int year, int month, int day, int hrs, int mins, Period period, boolean isPersonal) {
         tasks.add(new Task(header, description, year, month, day, hrs, mins, period, isPersonal));
@@ -21,42 +21,25 @@ public class TaskHandler {
     }
 
     public static void printDailyTasks() {
-        GregorianCalendar nextDay = getNextDay();
-        GregorianCalendar previousDay = getPreviousDay();
-        System.out.println(getPreviousDay().getTime());
-        System.out.println(getNextDay().getTime());
-        refresh(previousDay);
+        LocalDate nextDay = LocalDate.now().plusDays(1);
+        refresh(LocalDate.now());
         for (Task task : tasks) {
-            if (task.getDate().before(nextDay)) {
+            if (task.getDate().isBefore(nextDay)) {
                 System.out.println(task);
             }
         }
     }
 
-    public static void printTasksOnDate(int day, int month, int year) {
-        Set<Task> temp = new TreeSet<>();
-        System.out.printf("Tasks for %02d.%02d.%s\n", day, month, year);
-        GregorianCalendar specificDay = new GregorianCalendar(year, month, day, Calendar.AM, 0);
-        for (Task task : tasks) {
-            if (task.getPeriod().equals(DAILY)) temp.add(task);
-        }
-    }
-
-    private static void moveToArchive(Task task) {
-        archive.merge(task, task.getDate().getTime().toString(), (value, x) -> value + ", " + task.getDate().getTime());
-    }
-
-    private static void refresh(GregorianCalendar previousDay) {
+    private static void refresh(LocalDate date) {
         var iterator = tasks.iterator();
         while (iterator.hasNext()) {
             var task = iterator.next();
-            if (task.getPeriod().equals(ONCE) && task.getDate().before(previousDay)) {
-                moveToArchive(task);
+            if (task.getPeriod().equals(ONCE) && task.getDate().isBefore(date)) {
+                expired.add(0, task);
                 iterator.remove();
                 continue;
             }
-            while (!task.getPeriod().equals(ONCE) && task.getDate().before(previousDay)) {
-                task.setNextTime();
+            while (!task.getPeriod().equals(ONCE) && task.getDate().isBefore(date)) {
             }
         }
     }
@@ -67,7 +50,7 @@ public class TaskHandler {
         while (iterator.hasNext()) {
             var temp = iterator.next();
             if (temp.getId() == id) {
-                removed.add(temp);
+                removed.add(0, temp);
                 iterator.remove();
                 break;
             }
@@ -79,26 +62,27 @@ public class TaskHandler {
         removed.forEach(t -> System.out.println(t));
     }
 
-    public static void printArchivedTasks() {
-        archive.forEach((t, str) -> System.out.println(t + "\nWas actual: " + str));
+    public static void printExpiredTasks() {
+        expired.forEach(t -> System.out.println(t));
     }
 
-    private static GregorianCalendar getNextDay() {
-        GregorianCalendar nextDay = new GregorianCalendar();
-        nextDay.set(Calendar.HOUR, Calendar.AM);
-        nextDay.set(Calendar.MINUTE, 0);
-        nextDay.set(Calendar.SECOND, 0);
-        nextDay.roll(Calendar.DAY_OF_WEEK, 1);
-        return nextDay;
+    public static void printTasksOnSpecificDate(int year, int month, int day) {
+        Comparator<Task> timeComparator = (o1, o2) -> {
+            if (o1.getTime().isBefore(o2.getTime())) return 1;
+            else if (o1.getTime().isAfter(o2.getTime())) return -1;
+            else return 0;
+        };
+        Set<Task> temp = new TreeSet<>(timeComparator);
+        LocalDate date = LocalDate.of(year, month, day);
+        for (Task task : tasks) {
+            if (task.getPeriod().equals(ONCE) && task.getDate().equals(date) ||
+                    task.getPeriod().equals(DAILY) ||
+                    task.getPeriod().equals(WEEKLY) && task.getDate().getDayOfWeek().equals(date.getDayOfWeek()) ||
+                    task.getPeriod().equals(MONTHLY) && task.getDate().getDayOfMonth() == date.getDayOfMonth() ||
+                    task.getPeriod().equals(YEARLY) && task.getDate().getDayOfYear() == date.getDayOfYear())
+                temp.add(task);
+        }
     }
-
-    private static GregorianCalendar getPreviousDay() {
-        GregorianCalendar previousDay = new GregorianCalendar();
-        previousDay.set(Calendar.HOUR, Calendar.AM);
-        previousDay.set(Calendar.MINUTE, 0);
-        previousDay.set(Calendar.SECOND, 0);
-        return previousDay;
-    }
-
 }
+
 
