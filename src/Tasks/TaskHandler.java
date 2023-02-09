@@ -46,20 +46,23 @@ final public class TaskHandler {
 
 
     public static void removeByID(long id) {
-        var iterator = tasks.iterator();
-        while (iterator.hasNext()) {
-            var temp = iterator.next();
-            if (temp.getId() == id) {
-                removed.add(0, temp);
-                iterator.remove();
-                break;
-            }
-        }
+        Task task = findByID(id);
+        removed.add(0, task);
+        tasks.remove(task);
     }
+
+    public static Task findByID(long id) {
+        for (Task task : tasks) {
+            if (task.getId() == id) return task;
+            else throw new NoSuchElementException("Can't find task with id: " + id);
+        }
+        return null;
+    }
+
 
     public static void printRemovedTasks() {
         System.out.println("Removed tasks list:");
-        removed.forEach(t -> System.out.println(t));
+        removed.forEach(System.out::println);
     }
 
     public static void printExpiredTasks() {
@@ -67,21 +70,23 @@ final public class TaskHandler {
     }
 
     public static void printTasksOnSpecificDate(int year, int month, int day) {
-        Comparator<Task> timeComparator = (o1, o2) -> {
-            if (o1.getTime().isBefore(o2.getTime())) return 1;
-            else if (o1.getTime().isAfter(o2.getTime())) return -1;
-            else return 0;
-        };
-        Set<Task> temp = new TreeSet<>(timeComparator);
+        Set<Task> temp = new TreeSet<>(Comparator.comparingInt(o -> o.getTime().toSecondOfDay()));
         LocalDate date = LocalDate.of(year, month, day);
         for (Task task : tasks) {
             if (task.getPeriod().equals(ONCE) && task.getDate().equals(date) ||
                     task.getPeriod().equals(DAILY) ||
                     task.getPeriod().equals(WEEKLY) && task.getDate().getDayOfWeek().equals(date.getDayOfWeek()) ||
                     task.getPeriod().equals(MONTHLY) && task.getDate().getDayOfMonth() == date.getDayOfMonth() ||
-                    task.getPeriod().equals(YEARLY) && task.getDate().getDayOfYear() == date.getDayOfYear())
+                    task.getPeriod().equals(YEARLY) && task.getDate().getMonth().equals(date.getMonth()) && task.getDate().getDayOfMonth() == date.getDayOfMonth())
                 temp.add(task);
         }
+    }
+
+    public static Long[] getIdList() {
+        refresh(LocalDate.now());
+        List<Long> t = new ArrayList<>();
+        tasks.forEach(n -> t.add(n.getId()));
+        return t.toArray(Long[]::new);
     }
 }
 

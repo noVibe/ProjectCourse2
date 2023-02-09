@@ -10,7 +10,6 @@ import java.util.*;
 
 final public class Task implements Comparable {
     private static long count = 0;
-    final private static List<Task> finishedTasks = new LinkedList<>();
     final private long id;
     final private boolean isPersonal;
     private String header;
@@ -32,9 +31,8 @@ final public class Task implements Comparable {
 
     @Override
     public int compareTo(Object o) {
-        if (date.isBefore(((Task) o).getDateTime())) return -1;
-        else if (date.isAfter(((Task) o).getDateTime())) return 1;
-        else return 0;
+        if (date.isAfter(((Task) o).date)) return 1;
+        else return -1;
     }
 
     @Override
@@ -84,5 +82,19 @@ final public class Task implements Comparable {
         return period;
     }
 
+    public String getHeader() {
+        return header;
+    }
 
+    public void setHeader(String header) {
+        this.header = header;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }
