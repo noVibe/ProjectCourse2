@@ -3,12 +3,10 @@ package console_handling;
 import Tasks.Task;
 import Tasks.TaskHandler;
 import enums.Period;
-import exceptions.PastCall;
+import exceptions.PastCallException;
 
 import java.io.IOException;
-import java.time.DateTimeException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.util.*;
 
 import static enums.Period.*;
@@ -16,7 +14,6 @@ import static enums.Period.*;
 final public class ConsoleHandle {
 
     static Scanner scanner = new Scanner(System.in);
-    static LocalDateTime date;
 
     public static void main(String[] args) throws InterruptedException {
         HashMap<Integer, Period> periods = new HashMap<>();
@@ -38,39 +35,51 @@ final public class ConsoleHandle {
          expired tasks
 
          */
+        LocalDateTime date;
         Task task;
         String header;
         String description;
-        int year, month, day, hour, minute, period, isPersonal, modify;
+        int year = -1, month = -1, weekday = -1, day = -1, hour, minute, period, isPersonal, modify;
         long id;
 
         while (true) {
-            Thread.sleep(100);
+            LocalDate serviceDate = LocalDate.now();
+
             int general = validateIntInput("Task operations: 1. Watch info: 2", 1, 2);
             if (general == 1) {
 
                 int taskOperations = validateIntInput("Add: 1. Modify: 2. Remove: 3", 1, 2, 3);
 
                 if (taskOperations == 1) {
-                    isPersonal = validateIntInput("Choose status. Personal: 1. Work: any other number.", 1);
+                    isPersonal = validateIntInput("Choose status. Personal: 1. Work: 2.", 1, 2);
                     header = validateStringInput("Create the header:");
                     description = validateStringInput("Write a description:");
                     period = validateIntInput("Set the period:\nOnce: 1. Daily: 2. Weekly: 3. Monthly: 4. Yearly: 5", 1, 2, 3, 4, 5);
                     while (true) try {
-                        year = validateRangeIntInput("Set the year: ", LocalDate.now().getYear(), LocalDate.MAX.getYear());
-                        month = validateRangeIntInput("Set the month: ", 1, 12);
-                        day = validateRangeIntInput("Set the day: ", 1, 31);
                         hour = validateRangeIntInput("Set hours: ", 0, 23);
-                        minute = validateRangeIntInput("Set minutes: ", 0, 23);
-                        TaskHandler.addNewTaskInstance(header, description, year, month, day, hour, minute, periods.get(period), isPersonal == 1);
-                        System.out.println("Added successfully.");
+                        minute = validateRangeIntInput("Set minutes: ", 0, 59);
+                        if (period == 3) {
+                            weekday = validateRangeIntInput("Monday: 1. Tuesday: 2. Wednesday: 3. Thursday: 4. Friday: 5. Saturday: 6, Sunday: 7.\nSet the day of week: ", 1, 7);
+                            while (!serviceDate.getDayOfWeek().equals(DayOfWeek.of(weekday))) serviceDate = serviceDate.plusDays(1);
+                            day = serviceDate.getDayOfMonth();
+                        } else {
+                            if (period == 4 || period == 1)
+                                day = validateRangeIntInput("Set the day: ", 1, LocalDateTime.MAX.getDayOfMonth());
+                            if (period == 5 || period == 1)
+                                month = validateRangeIntInput("Set the month: ", 1, 12);
+                            if (period == 1)
+                                year = validateRangeIntInput("Set the year: ", 0, LocalDate.MAX.getYear());
+                        }
+                        TaskHandler.addNewTaskInstance(header, description, year, weekday == -1 ? month : serviceDate.getMonthValue(), day, hour, minute, periods.get(period), isPersonal == 1);
+                        System.out.println("( +++++ Added successfully! +++++ )");
                         break;
-                    } catch (PastCall e) {
+                    } catch (PastCallException | DateTimeException e) {
                         System.err.println(e.getMessage());
+                        Thread.sleep(100);
                     }
 
                 } else if (taskOperations == 2) {
-                    id = validateIntInput("Put id of task to modify: ", TaskHandler.getIdList());
+                    id = validateLongInput("Put id of task to modify: ", TaskHandler.getIdList());
                     task = TaskHandler.findByID(id);
                     System.out.printf("Chosen task: %s", task);
                     modify = validateIntInput("Modify Header: 1. Description: 2. ", 1, 2);
@@ -82,12 +91,12 @@ final public class ConsoleHandle {
                         description = ("New description:");
                         task.setDescription(description);
                     }
-                    System.out.println("Modified successfully");
+                    System.out.println("( ~~~~~ Modified successfully! ~~~~~ )");
 
                 } else if (taskOperations == 3) {
-                    id = validateIntInput("Put id of task to remove: ", TaskHandler.getIdList());
+                    id = validateLongInput("Put id of task to remove: ", TaskHandler.getIdList());
                     TaskHandler.removeByID(id);
-                    System.out.println("Removed successfully");
+                    System.out.println("( ----- Removed successfully! ----- )");
                 }
             }
             if (general == 2) {
@@ -100,14 +109,34 @@ final public class ConsoleHandle {
         }
     }
 
-    private static <T extends Number> T validateIntInput(String message, T... args) {
+    private static long validateLongInput(String message, Long... args) {
         System.out.println(message);
         while (true) {
             try {
-                long temp = scanner.nextLong();
-                scanner.nextLine();
-                for (T arg : args) {
-                    if (arg.equals(temp)) return arg;
+                long n;
+                String s = scanner.nextLine();
+                if (s.matches("\\d+")) n = Long.parseLong(s);
+                else throw new IOException();
+                for (long arg : args) {
+                    if (arg == n) return arg;
+                }
+                throw new IOException();
+            } catch (IOException | InputMismatchException e) {
+                System.err.println("Incorrect input!\n" + message);
+            }
+        }
+    }
+
+    private static int validateIntInput(String message, int... args) {
+        System.out.println(message);
+        while (true) {
+            try {
+                int n;
+                String s = scanner.nextLine();
+                if (s.matches("\\d+")) n = Integer.parseInt(s);
+                else throw new IOException();
+                for (int arg : args) {
+                    if (arg == n) return arg;
                 }
                 throw new IOException();
             } catch (IOException | InputMismatchException e) {
@@ -120,10 +149,12 @@ final public class ConsoleHandle {
         System.out.print(message);
         while (true) {
             try {
-                int temp = scanner.nextInt();
-                scanner.nextLine();
-                if (temp < min || temp > max) throw new IOException();
-                else return temp;
+                int n;
+                String s = scanner.nextLine();
+                if (s.matches("\\d+")) n = Integer.parseInt(s);
+                else throw new IOException();
+                if (n < min || n > max) throw new IOException();
+                else return n;
             } catch (IOException | InputMismatchException e) {
                 System.err.printf("Incorrect input! Allowed range: from %s to %s\n%s", min, max, message);
             }
