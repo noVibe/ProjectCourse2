@@ -113,10 +113,10 @@ final public class ConsoleHandle {
                             System.out.printf("Chosen task:\n%s\n", task);
                             modify = validateIntInput("Modify Header: 1. Description: 2. ", 1, 2);
                             if (modify == 1) {
-                                task.setHeader(validateStringInput("New Header:"));
+                                task.setHeader(validateStringInput("New Header: "));
                             }
                             if (modify == 2) {
-                                task.setDescription(validateStringInput("New Description:"));
+                                task.setDescription(validateStringInput("New Description: "));
                             }
                             System.out.println("( ~~~~~ Modified successfully! ~~~~~ )");
                         }
