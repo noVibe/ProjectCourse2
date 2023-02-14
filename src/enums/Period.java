@@ -6,4 +6,5 @@ public enum Period {
     WEEKLY,
     MONTHLY,
     YEARLY;
+
 }
