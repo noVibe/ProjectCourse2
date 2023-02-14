@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 
-public abstract class Task implements Comparable<LocalDateTime> {
+public abstract class Task implements Comparable<Task> {
     final private long id;
     final private boolean isPersonal;
     private String header;
@@ -31,8 +31,8 @@ public abstract class Task implements Comparable<LocalDateTime> {
     protected abstract void refreshDate();
 
     @Override
-    public int compareTo(LocalDateTime o) {
-        if (date.toLocalTime().isAfter((o.toLocalTime()))) return 1;
+    public int compareTo(Task o) {
+        if (date.toLocalTime().isAfter((o.date.toLocalTime()))) return 1;
         else return -1;
     }
 

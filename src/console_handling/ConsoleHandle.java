@@ -7,6 +7,8 @@ import exceptions.PastCallException;
 
 import java.io.IOException;
 import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.time.temporal.ChronoField;
 import java.util.*;
 import java.util.function.Function;
@@ -49,83 +51,110 @@ final public class ConsoleHandle {
         2 - info print:
             1 daily tasks
             2 all tasks
-            3 removed tasks
-            4 expired tasks
+            3 specific date tasks
+            4 removed tasks
+            5 expired tasks
+        0 - stop
          */
 
 
         while (true) {
-            LocalDate serviceDate = LocalDate.now();
-
-            int general = validateIntInput("Task operations: 1. Watch info: 2", 1, 2);
-            if (general == 1) {
-
-                int taskOperations = validateIntInput("Add: 1. Modify: 2. Remove: 3. Back: 0", 1, 2, 3, 0);
-                if (taskOperations == 4) continue;
-                if (taskOperations == 1) {
-                    isPersonal = validateIntInput("Choose status. Personal: 1. Work: 2.", 1, 2);
-                    header = validateStringInput("Create the header:");
-                    description = validateStringInput("Write a description:");
-                    period = validateIntInput("Set the period:\nOnce: 1. Daily: 2. Weekly: 3. Monthly: 4. Yearly: 5", 1, 2, 3, 4, 5);
-                    while (true) try {
-                        chronos.put(HOUR_OF_DAY, validateRangeIntInput("Set hours: ", 0, 23));
-                        chronos.put(MINUTE_OF_HOUR, validateRangeIntInput("Set minutes: ", 0, 59));
-                        if (period == 3) {
-                            weekday = validateRangeIntInput("Monday: 1. Tuesday: 2. Wednesday: 3. Thursday: 4. " +
-                                    "Friday: 5. Saturday: 6, Sunday: 7.\nSet the day of week: ", 1, 7);
-                            while (!serviceDate.getDayOfWeek().equals(DayOfWeek.of(weekday)))
-                                serviceDate = serviceDate.plusDays(1);
-                            chronos.put(DAY_OF_MONTH, serviceDate.getDayOfMonth());
-                        } else {
-                            if (period == 1) {
-                                chronos.put(YEAR, validateRangeIntInput("Set the year: ", now.get().getYear(), LocalDate.MAX.getYear()));
-                            }
-                            if (period == 5 || period == 1) {
-                                chronos.put(MONTH_OF_YEAR, validateRangeIntInput("Set the month: ",
-                                        LocalDate.now().getYear() == chronos.get(YEAR) && period == 1 ? now.get().getMonthValue() : 1, 12));
-                            }
-                            if (period == 4 || period == 1) {
-                                chronos.put(DAY_OF_MONTH, validateRangeIntInput("Set the day: ", period == 1 &&
-                                        now.get().getYear() == chronos.get(YEAR) && now.get().getMonthValue() == chronos.get(MONTH_OF_YEAR) ? now.get().getDayOfMonth() : 1, 31));
+            int general = validateIntInput("""
+                    Task operations:  1
+                    Watch info:       2
+                    Stop the program: 0""", 1, 2, 0);
+            switch (general) {
+                case 0-> System.exit(0);
+                case 1 -> {
+                    int taskOperations = validateIntInput("Add: 1. Modify: 2. Remove: 3. Back: 0", 1, 2, 3, 0);
+                    switch (taskOperations) {
+                        case 1 -> {
+                            isPersonal = validateIntInput("Choose status. Personal: 1. Work: 2.", 1, 2);
+                            header = validateStringInput("Create the header:");
+                            description = validateStringInput("Write a description:");
+                            period = validateIntInput("Set the period:\nOnce: 1. Daily: 2. Weekly: 3. Monthly: 4. Yearly: 5", 1, 2, 3, 4, 5);
+                            while (true) try {
+                                chronos.put(HOUR_OF_DAY, validateRangeIntInput("Set hours: ", 0, 23));
+                                chronos.put(MINUTE_OF_HOUR, validateRangeIntInput("Set minutes: ", 0, 59));
+                                if (period == 3) {
+                                    weekday = validateRangeIntInput("Monday: 1. Tuesday: 2. Wednesday: 3. Thursday: 4. " +
+                                            "Friday: 5. Saturday: 6, Sunday: 7.\nSet the day of week: ", 1, 7);
+                                    LocalDate serviceDate = LocalDate.now();
+                                    while (!serviceDate.getDayOfWeek().equals(DayOfWeek.of(weekday)))
+                                        serviceDate = serviceDate.plusDays(1);
+                                    chronos.put(DAY_OF_MONTH, serviceDate.getDayOfMonth());
+                                } else {
+                                    if (period == 1) {
+                                        chronos.put(YEAR, validateRangeIntInput("Set the year: ", now.get().getYear(), LocalDate.MAX.getYear()));
+                                    }
+                                    if (period == 5 || period == 1) {
+                                        chronos.put(MONTH_OF_YEAR, validateRangeIntInput("Set the month: ",
+                                                LocalDate.now().getYear() == chronos.get(YEAR) && period == 1 ? now.get().getMonthValue() : 1, 12));
+                                    }
+                                    if (period == 4 || period == 1) {
+                                        chronos.put(DAY_OF_MONTH, validateRangeIntInput("Set the day: ", period == 1 &&
+                                                now.get().getYear() == chronos.get(YEAR) &&
+                                                now.get().getMonthValue() == chronos.get(MONTH_OF_YEAR) ? now.get().getDayOfMonth() : 1, 31));
+                                    }
+                                }
+                                if (period == 1 && checkIfPast.test(chronos)) throw new PastCallException();
+                                TaskHandler.addNewTaskInstance(isPersonal == 1, header, description, converter.apply(chronos), periods.get(period));
+                                System.out.println("( +++++ Added successfully! +++++ )");
+                                break;
+                            } catch (PastCallException | DateTimeException e) {
+                                System.err.println(e.getMessage());
+                                Thread.sleep(100);
                             }
                         }
-                        if (period == 1 && checkIfPast.test(chronos)) throw new PastCallException();
-                        TaskHandler.addNewTaskInstance(isPersonal == 1, header, description, converter.apply(chronos), periods.get(period));
-                        System.out.println("( +++++ Added successfully! +++++ )");
-                        break;
-                    } catch (PastCallException | DateTimeException e) {
-                        System.err.println(e.getMessage());
-                        Thread.sleep(100);
+                        case 2 -> {
+                            id = validateLongInput("Put id of task to modify: ", TaskHandler.getIdList());
+                            if (id == -1) continue;
+                            task = TaskHandler.findByID(id);
+                            System.out.printf("Chosen task:\n%s\n", task);
+                            modify = validateIntInput("Modify Header: 1. Description: 2. ", 1, 2);
+                            if (modify == 1) {
+                                task.setHeader(validateStringInput("New Header:"));
+                            }
+                            if (modify == 2) {
+                                task.setDescription(validateStringInput("New Description:"));
+                            }
+                            System.out.println("( ~~~~~ Modified successfully! ~~~~~ )");
+                        }
+                        case 3 -> {
+                            id = validateLongInput("Put id of task to remove: ", TaskHandler.getIdList());
+                            if (id == -1) continue;
+                            System.out.println(Arrays.toString(TaskHandler.getIdList()));
+                            TaskHandler.removeByID(id);
+                            System.out.println("( ----- Removed successfully! ----- )");
+                        }
                     }
-
-                } else if (taskOperations == 2) {
-                    id = validateLongInput("Put id of task to modify: ", TaskHandler.getIdList());
-                    if (id == -1) continue;
-                    task = TaskHandler.findByID(id);
-                    System.out.printf("Chosen task:\n%s\n", task);
-                    modify = validateIntInput("Modify Header: 1. Description: 2. ", 1, 2);
-                    if (modify == 1) {
-                        task.setHeader(validateStringInput("New Header:"));
-                    }
-                    if (modify == 2) {
-                        task.setDescription(validateStringInput("New Description:"));
-                    }
-                    System.out.println("( ~~~~~ Modified successfully! ~~~~~ )");
-
-                } else if (taskOperations == 3) {
-                    id = validateLongInput("Put id of task to remove: ", TaskHandler.getIdList());
-                    if (id == -1) continue;
-                    System.out.println(Arrays.toString(TaskHandler.getIdList()));
-                    TaskHandler.removeByID(id);
-                    System.out.println("( ----- Removed successfully! ----- )");
                 }
-            }
-            if (general == 2) {
-                int info = validateIntInput("Daily tasks: 1. Active tasks: 2. Expired tasks: 3. Removed tasks: 4. Back: 0", 1, 2, 3, 4, 0);
-                if (info == 1) TaskHandler.printTodayTasks();
-                if (info == 2) TaskHandler.printAllTasks();
-                if (info == 3) TaskHandler.printExpiredTasks();
-                if (info == 4) TaskHandler.printRemovedTasks();
+                case 2 -> {
+                    int info = validateIntInput("""
+                            Today's tasks         1
+                            All active tasks      2
+                            Selected date tasks   3
+                            Expired tasks         4
+                            Removed tasks         5
+                            Back                  0""", 1, 2, 3, 4, 5, 0);
+                    switch (info) {
+                        case 1 -> {
+                            System.out.println("Today is " + now.get().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)));
+                            TaskHandler.printTodayTasks();
+                        }
+                        case 2 -> TaskHandler.printAllActiveTasks();
+                        case 3 -> {
+                            int year = validateRangeIntInput("Choose the year: ", now.get().getYear(), LocalDate.MAX.getYear());
+                            int month = validateRangeIntInput("Choose the month: ",
+                                    LocalDate.now().getYear() == year ? now.get().getMonthValue() : 1, 12);
+                            int day = validateRangeIntInput("Choose the day: ", period == 1 &&
+                                    now.get().getYear() == year && now.get().getMonthValue() == month ? now.get().getDayOfMonth() : 1, 31);
+                            TaskHandler.printTasksOnSpecificDate(year, month, day);
+                        }
+                        case 4 -> TaskHandler.printExpiredTasks();
+                        case 5 -> TaskHandler.printRemovedTasks();
+                    }
+                }
             }
         }
     }

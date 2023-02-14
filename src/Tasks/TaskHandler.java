@@ -25,17 +25,6 @@ final public class TaskHandler {
         id++;
     }
 
-    public static void printAllTasks() {
-        refresh();
-        Comparator<Task> comparator = Comparator.comparing(Task::getDateTime);
-        tasks.stream().sorted(comparator).forEach(t -> System.out.println("============Active=Task============\n" + t));
-    }
-
-    public static void printTodayTasks() {
-        refresh();
-        printTasksOnSpecificDate(LocalDate.now().getYear(), LocalDate.now().getMonthValue(), LocalDate.now().getDayOfMonth());
-    }
-
     private static void refresh() {
         var iterator = tasks.iterator();
         while (iterator.hasNext()) {
@@ -54,7 +43,6 @@ final public class TaskHandler {
         tasks.remove(t);
     }
 
-
     public static Task findByID(long id) {
         for (Task task : tasks) {
             if (task.getId() == id) {
@@ -64,21 +52,37 @@ final public class TaskHandler {
         return null;
     }
 
+    public static void printAllActiveTasks() {
+        refresh();
+        Comparator<Task> comparator = Comparator.comparing(Task::getDateTime);
+        long r = tasks.stream().sorted(comparator).
+                peek(t -> System.out.println(("============Active=Task============\n" + t))).count();
+        if (r == 0) System.out.println("\n|---No-Active-Tasks-Found---|\n");
+    }
+
+    public static void printTodayTasks() {
+        refresh();
+        printTasksOnSpecificDate(LocalDate.now().getYear(), LocalDate.now().getMonthValue(), LocalDate.now().getDayOfMonth());
+    }
+
 
     public static void printRemovedTasks() {
         System.out.println("Removed tasks list:");
-        removed.forEach(t -> System.out.println("============Removed=Task============\n" + t));
+        long r = removed.stream().peek(t -> System.out.println("============Removed=Task============\n" + t)).count();
+        if (r == 0) System.out.println("\n|---No-Removed-Tasks-Found---|\n");
     }
 
     public static void printExpiredTasks() {
         refresh();
-        System.out.println("Removed tasks list:");
-        expired.forEach(t -> System.out.println("============Expired=Task============\n" + t));
+        System.out.println("Expired tasks list:");
+        long r = expired.stream().peek(t -> System.out.println("============Expired=Task============\n" + t)).count();
+        if (r == 0) System.out.println("\n|---No-Expired-Tasks-Found---|\n");
     }
 
     public static void printTasksOnSpecificDate(int year, int month, int day) {
-        tasks.stream().filter(t -> t.isActiveAt((LocalDate.of(year, month, day)))).sorted()
-                .forEach(t -> System.out.println("============Chosen=Date============\n" + t));
+        long r = tasks.stream().filter(t -> t.isActiveAt((LocalDate.of(year, month, day))))
+                .peek(t -> System.out.println("=========Tasks=Of=This=Date========\n" + t)).count();
+        if (r == 0) System.out.println("\n|---No-Tasks-For-This-Date---|\n");
     }
 
     public static long[] getIdList() {
