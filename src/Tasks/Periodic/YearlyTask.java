@@ -24,11 +24,7 @@ public class YearlyTask extends Task {
     }
 
     protected void refreshDate() {
-        LocalTime time = this.getDateTime().toLocalTime();
-        LocalDateTime newDate = LocalDateTime.now().with(MINUTE_OF_HOUR, time.getMinute()).with(HOUR_OF_DAY, time.getHour());
-        if (newDate.getMonthValue() > this.getDate().getMonthValue() ||
-                newDate.getMonth().equals(this.getDate().getMonth()) &&
-                        newDate.getDayOfMonth() > this.getDate().getDayOfMonth()) this.setDate(newDate.plusYears(1));
+        while (getDate().isBefore(LocalDate.now())) setDate(getDateTime().plusYears(1));
     }
 
     @Override
@@ -39,5 +35,3 @@ public class YearlyTask extends Task {
     }
 }
 
-//        getDate().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)) + " at " +
-//        getDate().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)) +

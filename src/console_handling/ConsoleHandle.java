@@ -40,7 +40,7 @@ final public class ConsoleHandle {
         put(5, YEARLY);
     }};
 
-    static HashMap<ChronoField, Integer> chronos = new HashMap<>();
+    static HashMap<ChronoField, Integer> chronos = new LinkedHashMap<>();
 
     public static void main(String[] args) throws InterruptedException {
         /*
@@ -57,14 +57,14 @@ final public class ConsoleHandle {
         0 - stop
          */
 
-
         while (true) {
             int general = validateIntInput("""
+                    ___________________
                     Task operations:  1
                     Watch info:       2
                     Stop the program: 0""", 1, 2, 0);
             switch (general) {
-                case 0-> System.exit(0);
+                case 0 -> System.exit(0);
                 case 1 -> {
                     int taskOperations = validateIntInput("Add: 1. Modify: 2. Remove: 3. Back: 0", 1, 2, 3, 0);
                     switch (taskOperations) {
@@ -93,8 +93,9 @@ final public class ConsoleHandle {
                                     }
                                     if (period == 4 || period == 1) {
                                         chronos.put(DAY_OF_MONTH, validateRangeIntInput("Set the day: ", period == 1 &&
-                                                now.get().getYear() == chronos.get(YEAR) &&
-                                                now.get().getMonthValue() == chronos.get(MONTH_OF_YEAR) ? now.get().getDayOfMonth() : 1, 31));
+                                                        now.get().getYear() == chronos.get(YEAR) &&
+                                                        now.get().getMonthValue() == chronos.get(MONTH_OF_YEAR) ? now.get().getDayOfMonth() : 1,
+                                                Month.of(chronos.get(MONTH_OF_YEAR)).length(Year.isLeap(chronos.get(YEAR)))));
                                     }
                                 }
                                 if (period == 1 && checkIfPast.test(chronos)) throw new PastCallException();

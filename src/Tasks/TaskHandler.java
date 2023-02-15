@@ -39,6 +39,8 @@ final public class TaskHandler {
 
     public static void removeByID(long id) {
         Task t = findByID(id);
+        assert t != null;
+        t.setActual(false);
         removed.add(t);
         tasks.remove(t);
     }
@@ -55,7 +57,7 @@ final public class TaskHandler {
     public static void printAllActiveTasks() {
         refresh();
         Comparator<Task> comparator = Comparator.comparing(Task::getDateTime);
-        long r = tasks.stream().sorted(comparator).
+        long r = tasks.stream().sorted(comparator).filter(Task::isActual).
                 peek(t -> System.out.println(("============Active=Task============\n" + t))).count();
         if (r == 0) System.out.println("\n|---No-Active-Tasks-Found---|\n");
     }
@@ -68,14 +70,16 @@ final public class TaskHandler {
 
     public static void printRemovedTasks() {
         System.out.println("Removed tasks list:");
-        long r = removed.stream().peek(t -> System.out.println("============Removed=Task============\n" + t)).count();
+        long r = removed.stream().filter(t -> !t.isActual())
+                .peek(t -> System.out.println("============Removed=Task============\n" + t)).count();
         if (r == 0) System.out.println("\n|---No-Removed-Tasks-Found---|\n");
     }
 
     public static void printExpiredTasks() {
         refresh();
         System.out.println("Expired tasks list:");
-        long r = expired.stream().peek(t -> System.out.println("============Expired=Task============\n" + t)).count();
+        long r = expired.stream().filter(t -> !t.isActual())
+                .peek(t -> System.out.println("============Expired=Task============\n" + t)).count();
         if (r == 0) System.out.println("\n|---No-Expired-Tasks-Found---|\n");
     }
 

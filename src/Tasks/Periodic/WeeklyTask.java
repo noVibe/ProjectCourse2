@@ -5,10 +5,8 @@ import enums.Period;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import static java.time.temporal.ChronoField.*;
 
 public class WeeklyTask extends Task {
     public WeeklyTask(long id, boolean isPersonal, String header, String description, LocalDateTime date, Period period) {
@@ -22,10 +20,7 @@ public class WeeklyTask extends Task {
 
     @Override
     protected void refreshDate() {
-        LocalTime time = this.getDateTime().toLocalTime();
-        LocalDateTime newDate = LocalDateTime.now().with(MINUTE_OF_HOUR, time.getMinute()).with(HOUR_OF_DAY, time.getHour());
-        while (!newDate.getDayOfWeek().equals(this.getDate().getDayOfWeek())) newDate = newDate.plusDays(1);
-        this.setDate(newDate);
+        while (!getDate().getDayOfWeek().equals(LocalDate.now().getDayOfWeek())) setDate(getDateTime().plusDays(1));
     }
     @Override
     public String toString() {
