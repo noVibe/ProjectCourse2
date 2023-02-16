@@ -52,7 +52,7 @@ public abstract class Task implements Comparable<Task> {
         isActual = actual;
     }
 
-    public void setDate(LocalDateTime date) {
+    public void setDateTime(LocalDateTime date) {
         this.date = date;
     }
 

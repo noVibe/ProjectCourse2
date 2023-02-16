@@ -15,12 +15,17 @@ public class WeeklyTask extends Task {
 
     @Override
     public boolean isActiveAt(LocalDate date) {
-        return date.getDayOfWeek().equals(this.getDate().getDayOfWeek());
+        return date.getDayOfWeek().equals(getDate().getDayOfWeek());
     }
 
     @Override
     protected void refreshDate() {
-        while (!getDate().getDayOfWeek().equals(LocalDate.now().getDayOfWeek())) setDate(getDateTime().plusDays(1));
+        while (!getDate().getDayOfWeek().equals(LocalDate.now().getDayOfWeek())) {
+            setDateTime(getDateTime()
+                    .withYear(LocalDate.now().getYear())
+                    .withMonth(LocalDate.now().getMonthValue())
+                    .plusDays(1));
+        }
     }
     @Override
     public String toString() {

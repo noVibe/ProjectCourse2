@@ -24,7 +24,7 @@ public class DailyTask extends Task {
     @Override
     protected void refreshDate() {
         LocalTime time = getDateTime().toLocalTime();
-        setDate(LocalDateTime.now().with(MINUTE_OF_HOUR, time.getMinute()).with(HOUR_OF_DAY, time.getHour()));
+        setDateTime(LocalDateTime.now().with(MINUTE_OF_HOUR, time.getMinute()).with(HOUR_OF_DAY, time.getHour()));
     }
 
     @Override

@@ -91,9 +91,16 @@ final public class ConsoleHandle {
                                         chronos.put(MONTH_OF_YEAR, validateRangeIntInput("Set the month: ",
                                                 LocalDate.now().getYear() == chronos.get(YEAR) && period == 1 ? now.get().getMonthValue() : 1, 12));
                                     }
-                                    if (period == 4 || period == 1) {
-                                        chronos.put(DAY_OF_MONTH, validateRangeIntInput("Set the day: ", period == 1 &&
-                                                        now.get().getYear() == chronos.get(YEAR) &&
+                                    if (period == 4) {
+                                        chronos.put(DAY_OF_MONTH, validateRangeIntInput("""
+                                                        Set the day. Last day is limited by the current month.
+                                                        It will be adjusted automatically for other ones.
+                                                        Enter the day number:\s""", 1,
+                                                LocalDate.now().getMonth().length(LocalDate.now().isLeapYear())));
+                                    }
+                                    if (period == 1) {
+                                        chronos.put(DAY_OF_MONTH, validateRangeIntInput("Set the day: ",
+                                                now.get().getYear() == chronos.get(YEAR) &&
                                                         now.get().getMonthValue() == chronos.get(MONTH_OF_YEAR) ? now.get().getDayOfMonth() : 1,
                                                 Month.of(chronos.get(MONTH_OF_YEAR)).length(Year.isLeap(chronos.get(YEAR)))));
                                     }

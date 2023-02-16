@@ -7,6 +7,7 @@ import enums.Period;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static enums.Period.*;
 
@@ -38,9 +39,8 @@ final public class TaskHandler {
     }
 
     public static void removeByID(long id) {
-        Task t = findByID(id);
-        assert t != null;
-        t.setActual(false);
+        Task t = Optional.ofNullable(findByID(id))
+                .orElseThrow(() -> new NoSuchElementException("Task with id " + id + " is not present"));
         removed.add(t);
         tasks.remove(t);
     }
@@ -57,9 +57,12 @@ final public class TaskHandler {
     public static void printAllActiveTasks() {
         refresh();
         Comparator<Task> comparator = Comparator.comparing(Task::getDateTime);
-        long r = tasks.stream().sorted(comparator).filter(Task::isActual).
-                peek(t -> System.out.println(("============Active=Task============\n" + t))).count();
+        System.out.println(tasks);
+        long r = tasks.stream().sorted(comparator).filter(Task::isActual).limit(tasks.size())
+                .peek(t -> System.out.println(("============Active=Task============\n" + t))).count();
         if (r == 0) System.out.println("\n|---No-Active-Tasks-Found---|\n");
+
+        var list = tasks.stream().sorted(comparator).collect(Collectors.groupingBy(Task::getDate));
     }
 
     public static void printTodayTasks() {

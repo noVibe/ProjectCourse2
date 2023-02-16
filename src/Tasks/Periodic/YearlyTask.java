@@ -5,12 +5,8 @@ import enums.Period;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-
-import static java.time.temporal.ChronoField.HOUR_OF_DAY;
-import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
 
 public class YearlyTask extends Task {
 
@@ -24,7 +20,7 @@ public class YearlyTask extends Task {
     }
 
     protected void refreshDate() {
-        while (getDate().isBefore(LocalDate.now())) setDate(getDateTime().plusYears(1));
+        while (getDate().isBefore(LocalDate.now())) setDateTime(getDateTime().plusYears(1));
     }
 
     @Override
