@@ -20,11 +20,12 @@ public class WeeklyTask extends Task {
 
     @Override
     protected void refreshDate() {
-        while (!getDate().getDayOfWeek().equals(LocalDate.now().getDayOfWeek())) {
+        if (getDate().isBefore(LocalDate.now())) {
             setDateTime(getDateTime()
                     .withYear(LocalDate.now().getYear())
                     .withMonth(LocalDate.now().getMonthValue())
-                    .plusDays(1));
+                    .plusWeeks(1));
+            System.out.println(getDate());
         }
     }
     @Override

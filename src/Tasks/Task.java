@@ -59,7 +59,7 @@ public abstract class Task implements Comparable<Task> {
     @Override
     public String toString() {
         return "Header: " + header +
-                "\nDescription: " + description +
+                (description.isBlank() ? "" : "\nDescription: " + description) +
                 "\nTask Status: " + (isPersonal ? "personal" : "work")+
                 "\nid: " + id;
     }

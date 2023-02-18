@@ -6,6 +6,8 @@ import Tasks.Periodic.*;
 import enums.Period;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,11 +40,12 @@ final public class TaskHandler {
         }
     }
 
-    public static void removeByID(long id) {
+    public static Task removeByID(long id) {
         Task t = Optional.ofNullable(findByID(id))
                 .orElseThrow(() -> new NoSuchElementException("Task with id " + id + " is not present"));
         removed.add(t);
         tasks.remove(t);
+        return t;
     }
 
     public static Task findByID(long id) {
@@ -56,14 +59,17 @@ final public class TaskHandler {
 
     public static void printAllActiveTasks() {
         refresh();
-        Comparator<Task> comparator = Comparator.comparing(Task::getDateTime);
-        System.out.println(tasks);
-        long r = tasks.stream().sorted(comparator).filter(Task::isActual).limit(tasks.size())
-                .peek(t -> System.out.println(("============Active=Task============\n" + t))).count();
-        if (r == 0) System.out.println("\n|---No-Active-Tasks-Found---|\n");
-
-        var list = tasks.stream().sorted(comparator).collect(Collectors.groupingBy(Task::getDate));
+        if (tasks.isEmpty()) System.out.println("\n|---No-Active-Tasks-Found---|\n");
+        else {
+            Map<LocalDate, List<Task>> groupedTasks = tasks.stream().collect(Collectors.groupingBy(Task::getDate));
+            groupedTasks.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach((entry) -> {
+                        System.out.printf("========= %s =========\n", entry.getKey().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)));
+                        entry.getValue().stream().sorted()
+                                .forEach(t -> System.out.println(t + "\n------------------------------"));
+                    });
+        }
     }
+
 
     public static void printTodayTasks() {
         refresh();
@@ -73,17 +79,15 @@ final public class TaskHandler {
 
     public static void printRemovedTasks() {
         System.out.println("Removed tasks list:");
-        long r = removed.stream().filter(t -> !t.isActual())
-                .peek(t -> System.out.println("============Removed=Task============\n" + t)).count();
-        if (r == 0) System.out.println("\n|---No-Removed-Tasks-Found---|\n");
+        if (removed.isEmpty()) System.out.println("\n|---No-Removed-Tasks-Found---|\n");
+        else for (Task t : removed) System.out.println("============Removed=Task============\n" + t);
     }
 
     public static void printExpiredTasks() {
         refresh();
         System.out.println("Expired tasks list:");
-        long r = expired.stream().filter(t -> !t.isActual())
-                .peek(t -> System.out.println("============Expired=Task============\n" + t)).count();
-        if (r == 0) System.out.println("\n|---No-Expired-Tasks-Found---|\n");
+        if (expired.isEmpty()) System.out.println("\n|---No-Expired-Tasks-Found---|\n");
+        else for (Task t : expired) System.out.println("============Expired=Task============\n" + t);
     }
 
     public static void printTasksOnSpecificDate(int year, int month, int day) {

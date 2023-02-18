@@ -23,7 +23,7 @@ final public class ConsoleHandle {
     static Supplier<LocalDateTime> now = LocalDateTime::now;
     static Function<HashMap<ChronoField, Integer>, LocalDateTime> converter = m -> {
         LocalDateTime date = now.get();
-        for (ChronoField c : m.keySet()) date = date.with(c, m.get(c));
+        for (ChronoField unit : m.keySet()) date = date.with(unit, m.get(unit));
         return date;
     };
     static Predicate<HashMap<ChronoField, Integer>> checkIfPast = m -> now.get().isAfter(converter.apply(m));
@@ -71,9 +71,10 @@ final public class ConsoleHandle {
                         case 1 -> {
                             isPersonal = validateIntInput("Choose status. Personal: 1. Work: 2.", 1, 2);
                             header = validateStringInput("Create the header:");
-                            description = validateStringInput("Write a description:");
+                            description = validateStringInput("Write a description. Put '-' if you don't need it:");
                             period = validateIntInput("Set the period:\nOnce: 1. Daily: 2. Weekly: 3. Monthly: 4. Yearly: 5", 1, 2, 3, 4, 5);
                             while (true) try {
+                                chronos.clear();
                                 chronos.put(HOUR_OF_DAY, validateRangeIntInput("Set hours: ", 0, 23));
                                 chronos.put(MINUTE_OF_HOUR, validateRangeIntInput("Set minutes: ", 0, 59));
                                 if (period == 3) {
@@ -93,8 +94,8 @@ final public class ConsoleHandle {
                                     }
                                     if (period == 4) {
                                         chronos.put(DAY_OF_MONTH, validateRangeIntInput("""
-                                                        Set the day. Last day is limited by the current month.
-                                                        It will be adjusted automatically for other ones.
+                                                        Set the day (last day is limited by the current month.
+                                                        It will be adjusted automatically for other ones).
                                                         Enter the day number:\s""", 1,
                                                 LocalDate.now().getMonth().length(LocalDate.now().isLeapYear())));
                                     }
@@ -115,25 +116,25 @@ final public class ConsoleHandle {
                             }
                         }
                         case 2 -> {
-                            id = validateLongInput("Put id of task to modify: ", TaskHandler.getIdList());
+                            id = validateLongInput("Type 'back' to return.\nPut id of task to modify: ", TaskHandler.getIdList());
                             if (id == -1) continue;
                             task = TaskHandler.findByID(id);
-                            System.out.printf("Chosen task:\n%s\n", task);
-                            modify = validateIntInput("Modify Header: 1. Description: 2. ", 1, 2);
+                            System.out.printf("|. . .  .  .   Chosen task   .  .  . . .|\n%s\n. . . . . . . . . . . . . . . . . . . . .\n", task);
+                            modify = validateIntInput("Modify Header: 1. Description: 2. Back: 0.", 1, 2, 0);
+                            if (modify == 0) continue;
                             if (modify == 1) {
-                                task.setHeader(validateStringInput("New Header: "));
+                                task.setHeader(validateStringInput("Write a new Header: "));
                             }
                             if (modify == 2) {
-                                task.setDescription(validateStringInput("New Description: "));
+                                task.setDescription(validateStringInput("Write a new Description or use '-' to remove it: "));
                             }
                             System.out.println("( ~~~~~ Modified successfully! ~~~~~ )");
                         }
                         case 3 -> {
-                            id = validateLongInput("Put id of task to remove: ", TaskHandler.getIdList());
+                            id = validateLongInput("Type 'back' to return.\nPut id of task to remove: ", TaskHandler.getIdList());
                             if (id == -1) continue;
-                            System.out.println(Arrays.toString(TaskHandler.getIdList()));
-                            TaskHandler.removeByID(id);
-                            System.out.println("( ----- Removed successfully! ----- )");
+                            System.out.printf("|. . .  .  .   Chosen task  .  .  . . .|\n%s\n", TaskHandler.removeByID(id));
+                            System.out.println("( -x-x-x- Removed successfully! -x-x-x- )");
                         }
                     }
                 }
@@ -181,7 +182,7 @@ final public class ConsoleHandle {
                 }
                 throw new IOException();
             } catch (IOException | InputMismatchException e) {
-                System.err.println("Incorrect input! Type \"back\" or\n" + message);
+                System.err.println("Incorrect input! \n" + message);
             }
         }
     }
@@ -226,6 +227,7 @@ final public class ConsoleHandle {
             try {
                 String temp = scanner.nextLine();
                 if (temp.isBlank()) throw new IOException();
+                if (temp.equals("-")) return "";
                 return temp;
             } catch (IOException e) {
                 System.err.println("Empty input!\n" + message);

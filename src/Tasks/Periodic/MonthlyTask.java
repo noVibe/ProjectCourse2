@@ -26,7 +26,7 @@ public class MonthlyTask extends Task {
 
     @Override
     public String toString() {
-        return getPeriod() + ": day " + getDate().getDayOfMonth() + " at " +
+        return getPeriod() + ": Day " + getDate().getDayOfMonth() + " at " +
                 getDateTime().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)) + "\n" + super.toString();
     }
 }
