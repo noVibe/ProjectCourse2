@@ -48,8 +48,8 @@ public abstract class Task implements Comparable<Task> {
         return isActual;
     }
 
-    public void setActual(boolean actual) {
-        isActual = actual;
+    public void setActual(boolean isActual) {
+        this.isActual = isActual;
     }
 
     public void setDateTime(LocalDateTime date) {

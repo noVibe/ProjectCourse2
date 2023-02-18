@@ -41,20 +41,15 @@ final public class TaskHandler {
     }
 
     public static Task removeByID(long id) {
-        Task t = Optional.ofNullable(findByID(id))
-                .orElseThrow(() -> new NoSuchElementException("Task with id " + id + " is not present"));
+        Task t = findByID(id);
         removed.add(t);
         tasks.remove(t);
         return t;
     }
 
     public static Task findByID(long id) {
-        for (Task task : tasks) {
-            if (task.getId() == id) {
-                return task;
-            }
-        }
-        return null;
+        return tasks.stream().filter(t -> t.getId() == id).findAny()
+                .orElseThrow(() -> new NoSuchElementException("Task with id " + id + " is not present"));
     }
 
     public static void printAllActiveTasks() {
